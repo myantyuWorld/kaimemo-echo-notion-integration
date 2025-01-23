@@ -1,1 +1,1 @@
-# template-echo-notion-integration
+# kaimemo-echo-notion-integration
