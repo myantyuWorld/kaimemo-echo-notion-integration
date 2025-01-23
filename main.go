@@ -7,12 +7,19 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/jomei/notionapi"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
-// air -c .air.tomlでホットリロードを有効化
+type KaimemoResponse struct {
+	Tag  string `json:"tag"`
+	Name string `json:"name"`
+}
+
+// export XXは、開いているターミナルのみ有効
+// export PATH=$PATH:$(go env GOPATH)/bin && air -c .air.tomlでホットリロードを有効化
 func main() {
 	e := echo.New()
 	// ミドルウェアを設定
@@ -30,16 +37,18 @@ func main() {
 		log.Fatalf("failed to notion query database: %v", err)
 	}
 
-	fmt.Println("---")
+	var kaimemoResponses []KaimemoResponse
 	for _, result := range resp.Results {
 		properties := result.Properties
+
+		data := KaimemoResponse{}
 		for key, property := range properties {
-			// テキストデータを取得
 			switch prop := property.(type) {
 			case *notionapi.TitleProperty:
 				fmt.Printf("  %s (Title): ", key)
 				for _, text := range prop.Title {
 					fmt.Print(text.Text.Content)
+					data.Name = text.Text.Content
 				}
 				fmt.Println()
 			case *notionapi.RichTextProperty:
@@ -54,17 +63,20 @@ func main() {
 				fmt.Printf("  %s (MultiSelect): ", key)
 				for _, option := range prop.MultiSelect {
 					fmt.Printf("%s ", option.Name)
+					data.Tag = option.Name
 				}
 				fmt.Println()
 			default:
 				fmt.Printf("  %s: Unhandled property type\n", key)
 			}
 		}
-		fmt.Println("---")
+		kaimemoResponses = append(kaimemoResponses, data)
 	}
 
-	e.GET("/hello", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello, Vercel!")
+	spew.Dump(kaimemoResponses)
+
+	e.GET("/kaimemo", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, kaimemoResponses)
 	})
 
 	// Vercel が使用するポートを環境変数から取得
