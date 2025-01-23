@@ -12,6 +12,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
+// air -c .air.tomlでホットリロードを有効化
 func main() {
 	e := echo.New()
 	// ミドルウェアを設定
