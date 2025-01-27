@@ -25,8 +25,11 @@ func main() {
 	// ミドルウェアを設定
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+
+	fmt.Println(os.Getenv("FRONTEND_URL"))
+
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:5173"},
+		AllowOrigins: []string{"http://localhost:5173", os.Getenv("FRONTEND_URL")},
 		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPost, http.MethodDelete},
 	}))
 
