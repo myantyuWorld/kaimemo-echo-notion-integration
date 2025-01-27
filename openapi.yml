@@ -23,7 +23,9 @@ components:
       content:
         application/json:
           schema:
-           $ref: '#/components/schemas/Kaimemo'
+            type: array
+            items:
+              $ref: '#/components/schemas/Kaimemo'
     UnauthorizedError:
       description: Access token is missing or invalid
     NotFoundError:
@@ -35,8 +37,7 @@ components:
       type: object
       properties:
         id:
-          type: integer
-          format: int64
+          type: string
         name:
           type: string
         tag:
