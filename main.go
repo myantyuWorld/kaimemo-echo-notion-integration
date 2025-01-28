@@ -67,6 +67,35 @@ func main() {
 		return c.JSON(http.StatusOK, kaimemoResponses)
 	})
 
+	e.POST("/kaimemo", func(c echo.Context) error {
+		_, err := client.Page.Create(context.Background(), &notionapi.PageCreateRequest{
+			Parent: notionapi.Parent{
+				DatabaseID: notionapi.DatabaseID(databaseID), // 既存のデータベースID
+			},
+			Properties: notionapi.Properties{
+				"name": &notionapi.TitleProperty{
+					Title: []notionapi.RichText{
+						{
+							Text: &notionapi.Text{
+								Content: "Sample Item2", // TODO : リクエストされたタイトルを設定
+							},
+						},
+					},
+				},
+				"tag": &notionapi.SelectProperty{
+					Select: notionapi.Option{
+						Name: "食費", // TODO : リクエストされたタグを設定(1 = 食費、2 = 日用品、3 = その他)などにする感じか
+					},
+				},
+			},
+		})
+
+		if err != nil {
+			return c.NoContent(http.StatusInternalServerError)
+		}
+		return c.NoContent(http.StatusCreated)
+	})
+
 	port := "3000"
 	e.Logger.Fatal(e.Start(":" + port))
 }
