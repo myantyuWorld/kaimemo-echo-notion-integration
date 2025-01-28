@@ -16,10 +16,6 @@ type KaimemoResponse struct {
 	Tag  string             `json:"tag"`
 	Name string             `json:"name"`
 	Done bool               `json:"done"`
-	ID   notionapi.ObjectID `json:"id"`
-	Tag  string             `json:"tag"`
-	Name string             `json:"name"`
-	Done bool               `json:"done"`
 }
 
 // export XXは、開いているターミナルのみ有効
@@ -44,37 +40,11 @@ func main() {
 		if err != nil {
 			log.Fatalf("failed to notion query database: %v", err)
 		}
-	e.GET("/kaimemo", func(c echo.Context) error {
-		resp, err := client.Database.Query(context.Background(), notionapi.DatabaseID(databaseID), query)
-		if err != nil {
-			log.Fatalf("failed to notion query database: %v", err)
-		}
 
 		var kaimemoResponses []KaimemoResponse
 		for _, result := range resp.Results {
 			properties := result.Properties
-		var kaimemoResponses []KaimemoResponse
-		for _, result := range resp.Results {
-			properties := result.Properties
 
-			data := KaimemoResponse{}
-			data.ID = result.ID
-			for _, property := range properties {
-				switch prop := property.(type) {
-				case *notionapi.TitleProperty:
-					for _, text := range prop.Title {
-						data.Name = text.Text.Content
-					}
-				case *notionapi.SelectProperty:
-					data.Tag = prop.Select.Name
-				case *notionapi.CheckboxProperty:
-					data.Done = prop.Checkbox
-				default:
-					// fmt.Printf("  %s: Unhandled property type\n", key)
-				}
-			}
-			kaimemoResponses = append(kaimemoResponses, data)
-		}
 			data := KaimemoResponse{}
 			data.ID = result.ID
 			for _, property := range properties {
