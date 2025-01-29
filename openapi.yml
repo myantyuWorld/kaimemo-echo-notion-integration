@@ -16,6 +16,47 @@ paths:
       responses:
         200: 
           $ref: '#/components/responses/GetKaimemos'
+    post:
+      summary: 買い物追加
+      description: 買い物を追加する
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                name:
+                  type: string
+                tag:
+                  type: string
+      responses:
+        200:
+          description: OK
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+        default:
+          $ref: '#/components/responses/GeneralError'
+  /kaimemo/{id}:
+    delete:
+      summary: 買い物削除
+      description: 買い物を削除する
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+        default:
+          $ref: '#/components/responses/GeneralError'
 components:
   responses:
     GetKaimemos:

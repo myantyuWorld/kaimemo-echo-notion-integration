@@ -97,7 +97,7 @@ func main() {
 				},
 				"tag": &notionapi.SelectProperty{
 					Select: notionapi.Option{
-						Name: req.Tag, // TODO : リクエストされたタグを設定(1 = 食費、2 = 日用品、3 = その他)などにする感じか
+						Name: req.Tag,
 					},
 				},
 			},
