@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/jomei/notionapi"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -94,6 +95,31 @@ func main() {
 			return c.NoContent(http.StatusInternalServerError)
 		}
 		return c.NoContent(http.StatusCreated)
+	})
+
+	e.DELETE("/kaimemo/:id", func(c echo.Context) error {
+		id := c.Param("id")
+		if id == "" {
+			return c.JSON(http.StatusBadRequest, map[string]string{
+				"error": "ID is required",
+			})
+		}
+
+		_, err := client.Page.Update(context.Background(), notionapi.PageID(id), &notionapi.PageUpdateRequest{
+			Archived: true,
+		})
+		if err != nil {
+			spew.Dump(err)
+
+			return c.JSON(http.StatusInternalServerError, map[string]string{
+				"error": "Failed to delete item",
+			})
+		}
+
+		return c.JSON(http.StatusOK, map[string]string{
+			"message": "Item deleted successfully",
+		})
+
 	})
 
 	port := "3000"
