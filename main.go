@@ -19,6 +19,11 @@ type KaimemoResponse struct {
 	Done bool               `json:"done"`
 }
 
+type CreateKaimemoRequest struct {
+	Tag  string `json:"tag"`
+	Name string `json:"name"`
+}
+
 // export XXは、開いているターミナルのみ有効
 // export PATH=$PATH:$(go env GOPATH)/bin && air -c .air.tomlでホットリロードを有効化
 func main() {
@@ -69,6 +74,13 @@ func main() {
 	})
 
 	e.POST("/kaimemo", func(c echo.Context) error {
+		req := CreateKaimemoRequest{}
+		if err := c.Bind(&req); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{
+				"error": "Invalid request",
+			})
+		}
+
 		_, err := client.Page.Create(context.Background(), &notionapi.PageCreateRequest{
 			Parent: notionapi.Parent{
 				DatabaseID: notionapi.DatabaseID(databaseID), // 既存のデータベースID
@@ -78,14 +90,14 @@ func main() {
 					Title: []notionapi.RichText{
 						{
 							Text: &notionapi.Text{
-								Content: "Sample Item2", // TODO : リクエストされたタイトルを設定
+								Content: req.Name,
 							},
 						},
 					},
 				},
 				"tag": &notionapi.SelectProperty{
 					Select: notionapi.Option{
-						Name: "食費", // TODO : リクエストされたタグを設定(1 = 食費、2 = 日用品、3 = その他)などにする感じか
+						Name: req.Tag, // TODO : リクエストされたタグを設定(1 = 食費、2 = 日用品、3 = その他)などにする感じか
 					},
 				},
 			},
