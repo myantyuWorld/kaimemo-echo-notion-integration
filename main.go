@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/jomei/notionapi"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -16,10 +17,11 @@ type KaimemoResponse struct {
 	Tag  string             `json:"tag"`
 	Name string             `json:"name"`
 	Done bool               `json:"done"`
-	ID   notionapi.ObjectID `json:"id"`
-	Tag  string             `json:"tag"`
-	Name string             `json:"name"`
-	Done bool               `json:"done"`
+}
+
+type CreateKaimemoRequest struct {
+	Tag  string `json:"tag"`
+	Name string `json:"name"`
 }
 
 // export XXは、開いているターミナルのみ有効
@@ -44,37 +46,11 @@ func main() {
 		if err != nil {
 			log.Fatalf("failed to notion query database: %v", err)
 		}
-	e.GET("/kaimemo", func(c echo.Context) error {
-		resp, err := client.Database.Query(context.Background(), notionapi.DatabaseID(databaseID), query)
-		if err != nil {
-			log.Fatalf("failed to notion query database: %v", err)
-		}
 
 		var kaimemoResponses []KaimemoResponse
 		for _, result := range resp.Results {
 			properties := result.Properties
-		var kaimemoResponses []KaimemoResponse
-		for _, result := range resp.Results {
-			properties := result.Properties
 
-			data := KaimemoResponse{}
-			data.ID = result.ID
-			for _, property := range properties {
-				switch prop := property.(type) {
-				case *notionapi.TitleProperty:
-					for _, text := range prop.Title {
-						data.Name = text.Text.Content
-					}
-				case *notionapi.SelectProperty:
-					data.Tag = prop.Select.Name
-				case *notionapi.CheckboxProperty:
-					data.Done = prop.Checkbox
-				default:
-					// fmt.Printf("  %s: Unhandled property type\n", key)
-				}
-			}
-			kaimemoResponses = append(kaimemoResponses, data)
-		}
 			data := KaimemoResponse{}
 			data.ID = result.ID
 			for _, property := range properties {
@@ -98,6 +74,13 @@ func main() {
 	})
 
 	e.POST("/kaimemo", func(c echo.Context) error {
+		req := CreateKaimemoRequest{}
+		if err := c.Bind(&req); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{
+				"error": "Invalid request",
+			})
+		}
+
 		_, err := client.Page.Create(context.Background(), &notionapi.PageCreateRequest{
 			Parent: notionapi.Parent{
 				DatabaseID: notionapi.DatabaseID(databaseID), // 既存のデータベースID
@@ -107,14 +90,14 @@ func main() {
 					Title: []notionapi.RichText{
 						{
 							Text: &notionapi.Text{
-								Content: "Sample Item2", // TODO : リクエストされたタイトルを設定
+								Content: req.Name,
 							},
 						},
 					},
 				},
 				"tag": &notionapi.SelectProperty{
 					Select: notionapi.Option{
-						Name: "食費", // TODO : リクエストされたタグを設定(1 = 食費、2 = 日用品、3 = その他)などにする感じか
+						Name: req.Tag, // TODO : リクエストされたタグを設定(1 = 食費、2 = 日用品、3 = その他)などにする感じか
 					},
 				},
 			},
@@ -124,6 +107,31 @@ func main() {
 			return c.NoContent(http.StatusInternalServerError)
 		}
 		return c.NoContent(http.StatusCreated)
+	})
+
+	e.DELETE("/kaimemo/:id", func(c echo.Context) error {
+		id := c.Param("id")
+		if id == "" {
+			return c.JSON(http.StatusBadRequest, map[string]string{
+				"error": "ID is required",
+			})
+		}
+
+		_, err := client.Page.Update(context.Background(), notionapi.PageID(id), &notionapi.PageUpdateRequest{
+			Archived: true,
+		})
+		if err != nil {
+			spew.Dump(err)
+
+			return c.JSON(http.StatusInternalServerError, map[string]string{
+				"error": "Failed to delete item",
+			})
+		}
+
+		return c.JSON(http.StatusOK, map[string]string{
+			"message": "Item deleted successfully",
+		})
+
 	})
 
 	port := "3000"
