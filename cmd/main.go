@@ -8,22 +8,9 @@ import (
 	"template-echo-notion-integration/internal/service"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/jomei/notionapi"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
-
-type KaimemoResponse struct {
-	ID   notionapi.ObjectID `json:"id"`
-	Tag  string             `json:"tag"`
-	Name string             `json:"name"`
-	Done bool               `json:"done"`
-}
-
-type CreateKaimemoRequest struct {
-	Tag  string `json:"tag"`
-	Name string `json:"name"`
-}
 
 // export XXは、開いているターミナルのみ有効
 // export PATH=$PATH:$(go env GOPATH)/bin && air -c .air.toml でホットリロードを有効化
