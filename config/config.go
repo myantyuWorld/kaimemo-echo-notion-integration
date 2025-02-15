@@ -6,10 +6,11 @@ import (
 )
 
 type AppConfig struct {
-	Port                    string
-	NotionAPIKey            string
-	NotionKaimemoDatabaseID string
-	AllowOrigins            []string
+	Port                                 string
+	NotionAPIKey                         string
+	NotionKaimemoDatabaseInputID         string
+	NotionKaimemoDatabaseSummaryRecordID string
+	AllowOrigins                         []string
 }
 
 func LoadConfig() *AppConfig {
@@ -20,9 +21,14 @@ func LoadConfig() *AppConfig {
 		log.Fatal("NOTION_API_KEY is not set")
 	}
 
-	notionKaimemoDatabaseID := os.Getenv("NOTION_DATABASE_ID")
-	if notionKaimemoDatabaseID == "" {
-		log.Fatal("NOTION_DATABASE_ID is not set")
+	notionKaimemoDatabaseInputID := os.Getenv("NOTION_DATABASE_KAIMEMO_INPUT")
+	if notionKaimemoDatabaseInputID == "" {
+		log.Fatal("NOTION_DATABASE_KAIMEMO_INPUT is not set")
+	}
+
+	notionKaimemoDatabaseSummaryRecordID := os.Getenv("NOTION_DATABASE_KAIMEMO_SUMMARY_RECORD")
+	if notionKaimemoDatabaseSummaryRecordID == "" {
+		log.Fatal("NOTION_DATABASE_KAIMEMO_SUMMARY_RECORD is not set")
 	}
 
 	frontEndUrl := os.Getenv("FRONTEND_URL")
@@ -31,9 +37,10 @@ func LoadConfig() *AppConfig {
 	}
 
 	return &AppConfig{
-		Port:                    port,
-		NotionAPIKey:            apiKey,
-		NotionKaimemoDatabaseID: notionKaimemoDatabaseID,
+		Port:                                 port,
+		NotionAPIKey:                         apiKey,
+		NotionKaimemoDatabaseInputID:         notionKaimemoDatabaseInputID,
+		NotionKaimemoDatabaseSummaryRecordID: notionKaimemoDatabaseSummaryRecordID,
 		AllowOrigins: []string{
 			"http://localhost:5173", "http://localhost:4173", frontEndUrl,
 		},

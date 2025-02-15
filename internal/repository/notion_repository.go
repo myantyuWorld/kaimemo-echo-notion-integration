@@ -9,14 +9,99 @@ import (
 )
 
 type kaimemoRepository struct {
-	client     *notionapi.Client
-	query      *notionapi.DatabaseQueryRequest
-	databaseID string
+	client                         *notionapi.Client
+	query                          *notionapi.DatabaseQueryRequest
+	databaseKaimemoInputID         string
+	databaseKaimemoSummaryRecordID string
+}
+
+// FetchKaimemoAmount implements KaimemoRepository.
+func (k *kaimemoRepository) FetchKaimemoAmountRecords() (*model.KaimemoAmountRecords, error) {
+	resp, err := k.client.Database.Query(context.Background(), notionapi.DatabaseID(k.databaseKaimemoSummaryRecordID), k.query)
+	if err != nil {
+		log.Printf("failed to notion query database: %v", err)
+		return nil, err
+	}
+
+	var kaimemoAmounts []model.KaimemoAmount
+	for _, result := range resp.Results {
+		properties := result.Properties
+
+		data := model.KaimemoAmount{}
+		data.ID = string(result.ID)
+		for _, property := range properties {
+			switch prop := property.(type) {
+			case *notionapi.TitleProperty:
+				for _, text := range prop.Title {
+					data.Date = text.Text.Content
+				}
+			case *notionapi.NumberProperty:
+				data.Amount = int(prop.Number)
+			case *notionapi.SelectProperty:
+				data.Tag = prop.Select.Name
+			default:
+				// Unhandled property type
+			}
+		}
+		kaimemoAmounts = append(kaimemoAmounts, data)
+	}
+
+	return &model.KaimemoAmountRecords{
+		Records: kaimemoAmounts,
+	}, nil
+}
+
+// InsertKaimemoAmount implements KaimemoRepository.
+func (k *kaimemoRepository) InsertKaimemoAmount(req model.CreateKaimemoAmountRequest) error {
+	_, err := k.client.Page.Create(context.Background(), &notionapi.PageCreateRequest{
+		Parent: notionapi.Parent{
+			DatabaseID: notionapi.DatabaseID(k.databaseKaimemoSummaryRecordID),
+		},
+		Properties: notionapi.Properties{
+			"date": &notionapi.TitleProperty{
+				Title: []notionapi.RichText{
+					{
+						Text: &notionapi.Text{
+							Content: req.Date,
+						},
+					},
+				},
+			},
+			"tag": &notionapi.SelectProperty{
+				Select: notionapi.Option{
+					Name: req.Tag,
+				},
+			},
+			"amount": &notionapi.NumberProperty{
+				Number: float64(req.Amount),
+			},
+		},
+	})
+
+	if err != nil {
+		log.Printf("failed to notion create page: %v", err)
+		return err
+	}
+	return nil
+}
+
+// RemoveKaimemoAmount implements KaimemoRepository.
+func (k *kaimemoRepository) RemoveKaimemoAmount(id string) error {
+	_, err := k.client.Page.Update(context.Background(), notionapi.PageID(id), &notionapi.PageUpdateRequest{
+		Archived: true,
+	})
+
+	if err != nil {
+		log.Printf("failed to notion update page: %v", err)
+		return err
+	}
+
+	return nil
 }
 
 // FetchKaimemo implements KaimemoRepository.
 func (k *kaimemoRepository) FetchKaimemo() ([]model.KaimemoResponse, error) {
-	resp, err := k.client.Database.Query(context.Background(), notionapi.DatabaseID(k.databaseID), k.query)
+	resp, err := k.client.Database.Query(context.Background(), notionapi.DatabaseID(k.databaseKaimemoInputID), k.query)
 	if err != nil {
 		log.Printf("failed to notion query database: %v", err)
 		return nil, err
@@ -52,7 +137,7 @@ func (k *kaimemoRepository) FetchKaimemo() ([]model.KaimemoResponse, error) {
 func (k *kaimemoRepository) InsertKaimemo(req model.CreateKaimemoRequest) error {
 	_, err := k.client.Page.Create(context.Background(), &notionapi.PageCreateRequest{
 		Parent: notionapi.Parent{
-			DatabaseID: notionapi.DatabaseID(k.databaseID), // 既存のデータベースID
+			DatabaseID: notionapi.DatabaseID(k.databaseKaimemoInputID), // 既存のデータベースID
 		},
 		Properties: notionapi.Properties{
 			"name": &notionapi.TitleProperty{
@@ -98,11 +183,14 @@ type KaimemoRepository interface {
 	FetchKaimemo() ([]model.KaimemoResponse, error)
 	InsertKaimemo(req model.CreateKaimemoRequest) error
 	RemoveKaimemo(id string) error
+	FetchKaimemoAmountRecords() (*model.KaimemoAmountRecords, error)
+	InsertKaimemoAmount(req model.CreateKaimemoAmountRequest) error
+	RemoveKaimemoAmount(id string) error
 }
 
-func NewNotionRepository(apiKey, databaseID string) KaimemoRepository {
+func NewNotionRepository(apiKey string, databaseKaimemoInputID string, databaseKaimemoSummaryRecordID string) KaimemoRepository {
 	client := notionapi.NewClient(notionapi.Token(apiKey))
 	query := &notionapi.DatabaseQueryRequest{}
 
-	return &kaimemoRepository{client: client, databaseID: databaseID, query: query}
+	return &kaimemoRepository{client: client, databaseKaimemoInputID: databaseKaimemoInputID, databaseKaimemoSummaryRecordID: databaseKaimemoSummaryRecordID, query: query}
 }

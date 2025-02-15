@@ -9,6 +9,26 @@ type kaimemoService struct {
 	repo repository.KaimemoRepository
 }
 
+// CreateKaimemoAmount implements KaimemoService.
+func (k *kaimemoService) CreateKaimemoAmount(req model.CreateKaimemoAmountRequest) error {
+	return k.repo.InsertKaimemoAmount(req)
+}
+
+// FetchKaimemoSummaryRecord implements KaimemoService.
+func (k *kaimemoService) FetchKaimemoSummaryRecord() ([]model.WeeklySummary, error) {
+	res, err := k.repo.FetchKaimemoAmountRecords()
+	if err != nil {
+		return nil, err
+	}
+
+	return res.GroupByWeek(), nil
+}
+
+// RemoveKaimemoAmount implements KaimemoService.
+func (k *kaimemoService) RemoveKaimemoAmount(id string) error {
+	return k.repo.RemoveKaimemoAmount(id)
+}
+
 // CreateKaimemo implements KaimemoService.
 func (k *kaimemoService) CreateKaimemo(req model.CreateKaimemoRequest) error {
 	return k.repo.InsertKaimemo(req)
@@ -28,6 +48,9 @@ type KaimemoService interface {
 	FetchKaimemo() ([]model.KaimemoResponse, error)
 	CreateKaimemo(req model.CreateKaimemoRequest) error
 	RemoveKaimemo(id string) error
+	FetchKaimemoSummaryRecord() ([]model.WeeklySummary, error)
+	CreateKaimemoAmount(req model.CreateKaimemoAmountRequest) error
+	RemoveKaimemoAmount(id string) error
 }
 
 func NewKaimemoService(repo repository.KaimemoRepository) KaimemoService {
