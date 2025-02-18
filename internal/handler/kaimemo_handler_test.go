@@ -24,9 +24,10 @@ func (m *MockKaimemoService) CreateKaimemoAmount(req model.CreateKaimemoAmountRe
 }
 
 // FetchKaimemoSummaryRecord implements service.KaimemoService.
-func (m *MockKaimemoService) FetchKaimemoSummaryRecord() ([]model.WeeklySummary, error) {
+func (m *MockKaimemoService) FetchKaimemoSummaryRecord() (model.KaimemoSummaryResponse, error) {
 	args := m.Called()
-	return args.Get(0).([]model.WeeklySummary), args.Error(1)
+
+	return args.Get(0).(model.KaimemoSummaryResponse), args.Error(1)
 }
 
 // RemoveKaimemoAmount implements service.KaimemoService.
@@ -141,47 +142,87 @@ func TestKaimemoHandler_FetchKaimemoSummaryRecord(t *testing.T) {
 	h := NewKaimemoHandler(mockService)
 	e := echo.New()
 
+	// TODO : こけている、モックが悪い？
 	t.Run("successful fetch with data", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
 
-		expectedSummary := []model.WeeklySummary{
-			{
-				WeekStart:   "2023-05-28",
-				WeekEnd:     "2023-06-03",
-				TotalAmount: 3000,
-				Items: []model.KaimemoAmount{
-					{ID: "", Date: "2023-05-30", Tag: "食費", Amount: 1000},
-					{ID: "", Date: "2023-06-01", Tag: "食費", Amount: 2000},
+		expectedSummary := model.KaimemoSummaryResponse{
+			MonthlySummaries: []model.MonthlySummary{
+				{
+					Month:       "2023-05",
+					TotalAmount: 3000,
+					TagSummary: map[string]int{
+						"食費":  2000,
+						"日用品": 1000,
+					},
+				},
+				{
+					Month:       "2023-06",
+					TotalAmount: 3000,
+					TagSummary: map[string]int{
+						"食費":  2000,
+						"日用品": 1000,
+					},
 				},
 			},
-			{
-				WeekStart:   "2023-06-04",
-				WeekEnd:     "2023-06-10",
-				TotalAmount: 3000,
-				Items: []model.KaimemoAmount{
-					{ID: "", Date: "2023-06-05", Tag: "日用品", Amount: 3000},
+			WeeklySummaries: []model.WeeklySummary{
+				{
+					WeekStart:   "2023-05-28",
+					WeekEnd:     "2023-06-03",
+					TotalAmount: 3000,
+					Items: []model.KaimemoAmount{
+						{ID: "", Date: "2023-05-30", Tag: "食費", Amount: 1000},
+						{ID: "", Date: "2023-06-01", Tag: "食費", Amount: 2000},
+					},
+				},
+				{
+					WeekStart:   "2023-06-04",
+					WeekEnd:     "2023-06-10",
+					TotalAmount: 3000,
+					Items: []model.KaimemoAmount{
+						{ID: "", Date: "2023-06-05", Tag: "日用品", Amount: 3000},
+					},
 				},
 			},
 		}
 
-		expectedJson := `[
+		expectedJson := `{
+			"monthlySummaries": [
+				{
+					"month": "2023-05",
+					"totalAmount": 3000,
+					"tagSummary": {
+						"食費": 2000,
+						"日用品": 1000
+					}
+				},
+				{
+					"month": "2023-06",
+					"totalAmount": 3000,
+					"tagSummary": {
+						"食費": 2000,
+						"日用品": 1000
+					}
+				}
+			],
+			"weeklySummaries": [
 				{
 					"weekStart": "2023-05-28",
 					"weekEnd": "2023-06-03",
 					"totalAmount": 3000,
 					"items": [
 						{
-							"id" : "",
-							"tag": "食費",
+							"id": "",
 							"date": "2023-05-30",
+							"tag": "食費",
 							"amount": 1000
 						},
 						{
-							"id" : "",
-							"tag": "食費",
+							"id": "",
 							"date": "2023-06-01",
+							"tag": "食費",
 							"amount": 2000
 						}
 					]
@@ -192,14 +233,15 @@ func TestKaimemoHandler_FetchKaimemoSummaryRecord(t *testing.T) {
 					"totalAmount": 3000,
 					"items": [
 						{
-							"id" : "",
-							"tag": "日用品",
+							"id": "",
 							"date": "2023-06-05",
+							"tag": "日用品",
 							"amount": 3000
 						}
 					]
 				}
-			]`
+			]
+		}`
 
 		mockService.On("FetchKaimemoSummaryRecord").Return(expectedSummary, nil).Once()
 		err := h.FetchKaimemoSummaryRecord(c)

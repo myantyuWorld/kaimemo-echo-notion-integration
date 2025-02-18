@@ -41,6 +41,49 @@ type KaimemoAmountRecords struct {
 	Records []KaimemoAmount
 }
 
+type MonthlySummary struct {
+	Month       string         `json:"month"`
+	TotalAmount int            `json:"totalAmount"`
+	TagSummary  map[string]int `json:"tagSummary"`
+}
+
+type KaimemoSummaryResponse struct {
+	MonthlySummaries []MonthlySummary `json:"monthlySummaries"`
+	WeeklySummaries  []WeeklySummary  `json:"weeklySummaries"`
+}
+
+func (k KaimemoAmountRecords) GroupByMonth() []MonthlySummary {
+	summaries := make(map[string]*MonthlySummary)
+
+	for _, amount := range k.Records {
+		date, _ := time.Parse("2006-01-02", amount.Date)
+		monthKey := date.Format("2006-01")
+
+		if _, exists := summaries[monthKey]; !exists {
+			summaries[monthKey] = &MonthlySummary{
+				Month:       monthKey,
+				TotalAmount: 0,
+				TagSummary:  make(map[string]int),
+			}
+		}
+
+		summary := summaries[monthKey]
+		summary.TotalAmount += amount.Amount
+		summary.TagSummary[amount.Tag] += amount.Amount
+	}
+
+	result := make([]MonthlySummary, 0, len(summaries))
+	for _, summary := range summaries {
+		result = append(result, *summary)
+	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Month < result[j].Month
+	})
+
+	return result
+}
+
 type WeeklySummary struct {
 	WeekStart   string          `json:"weekStart"`
 	WeekEnd     string          `json:"weekEnd"`

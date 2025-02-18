@@ -134,8 +134,9 @@ func TestKaimemoService_FetchKaimemoSummaryRecord(t *testing.T) {
 	t.Run("success fetch and group kaimemo records", func(t *testing.T) {
 		expected := &model.KaimemoAmountRecords{
 			Records: []model.KaimemoAmount{
-				{ID: "1", Amount: 100},
-				{ID: "2", Amount: 200},
+				{Date: "2023-05-30", Amount: 1000},
+				{Date: "2023-06-01", Amount: 2000},
+				{Date: "2023-06-05", Amount: 3000},
 			},
 		}
 		mockRepo.On("FetchKaimemoAmountRecords").Return(expected, nil).Once()
@@ -144,7 +145,6 @@ func TestKaimemoService_FetchKaimemoSummaryRecord(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
-		assert.IsType(t, []model.WeeklySummary{}, result)
 		mockRepo.AssertExpectations(t)
 	})
 
@@ -167,7 +167,8 @@ func TestKaimemoService_FetchKaimemoSummaryRecord(t *testing.T) {
 		result, err := service.FetchKaimemoSummaryRecord()
 
 		assert.NoError(t, err)
-		assert.Empty(t, result)
+		assert.Empty(t, result.MonthlySummaries)
+		assert.Empty(t, result.WeeklySummaries)
 		mockRepo.AssertExpectations(t)
 	})
 }
