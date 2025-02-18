@@ -13,6 +13,21 @@ type MockKaimemoRepository struct {
 	mock.Mock
 }
 
+func (m *MockKaimemoRepository) FetchKaimemoAmountRecords() (*model.KaimemoAmountRecords, error) {
+	args := m.Called()
+	return args.Get(0).(*model.KaimemoAmountRecords), args.Error(1)
+}
+
+func (m *MockKaimemoRepository) InsertKaimemoAmount(req model.CreateKaimemoAmountRequest) error {
+	args := m.Called(req)
+	return args.Error(0)
+}
+
+func (m *MockKaimemoRepository) RemoveKaimemoAmount(id string) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+
 func (m *MockKaimemoRepository) FetchKaimemo() ([]model.KaimemoResponse, error) {
 	args := m.Called()
 	return args.Get(0).([]model.KaimemoResponse), args.Error(1)
@@ -109,6 +124,50 @@ func TestKaimemoService_RemoveKaimemo(t *testing.T) {
 		err := service.RemoveKaimemo(id)
 
 		assert.Error(t, err)
+		mockRepo.AssertExpectations(t)
+	})
+}
+func TestKaimemoService_FetchKaimemoSummaryRecord(t *testing.T) {
+	mockRepo := new(MockKaimemoRepository)
+	service := NewKaimemoService(mockRepo)
+
+	t.Run("success fetch and group kaimemo records", func(t *testing.T) {
+		expected := &model.KaimemoAmountRecords{
+			Records: []model.KaimemoAmount{
+				{ID: "1", Amount: 100},
+				{ID: "2", Amount: 200},
+			},
+		}
+		mockRepo.On("FetchKaimemoAmountRecords").Return(expected, nil).Once()
+
+		result, err := service.FetchKaimemoSummaryRecord()
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.IsType(t, []model.WeeklySummary{}, result)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("error fetching kaimemo records", func(t *testing.T) {
+		mockRepo.On("FetchKaimemoAmountRecords").Return(&model.KaimemoAmountRecords{}, errors.New("fetch error")).Once()
+
+		result, err := service.FetchKaimemoSummaryRecord()
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("empty records return empty summary", func(t *testing.T) {
+		expected := &model.KaimemoAmountRecords{
+			Records: []model.KaimemoAmount{},
+		}
+		mockRepo.On("FetchKaimemoAmountRecords").Return(expected, nil).Once()
+
+		result, err := service.FetchKaimemoSummaryRecord()
+
+		assert.NoError(t, err)
+		assert.Empty(t, result)
 		mockRepo.AssertExpectations(t)
 	})
 }

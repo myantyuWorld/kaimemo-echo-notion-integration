@@ -11,12 +11,16 @@ servers:
 paths:
   /kaimemo:
     get:
+      tags:
+        - 買い物メモ
       summary: 買い物一覧取得
       description: 全件取得する
       responses:
         200: 
           $ref: '#/components/responses/GetKaimemos'
     post:
+      tags:
+        - 買い物メモ
       summary: 買い物追加
       description: 買い物を追加する
       requestBody:
@@ -40,6 +44,67 @@ paths:
           $ref: '#/components/responses/GeneralError'
   /kaimemo/{id}:
     delete:
+      tags:
+        - 買い物メモ
+      summary: 買い物削除
+      description: 買い物を削除する
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+        default:
+          $ref: '#/components/responses/GeneralError'
+  /kaimemo/summary:
+    get:
+      tags:
+        - 買い物集計
+      summary: 買い物集計
+      description: 買い物を集計する
+      responses:
+        200:
+          $ref: '#/components/responses/GetKaimemoSummary'
+    post:
+      tags:
+        - 買い物集計
+      summary: 買い物集計
+      description: 買い物を集計する
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                tag : 
+                  type: string
+                  example: 食費
+                date:
+                  type: string
+                  example: '2020-01-01'
+                amount:
+                  type: integer
+                  example: 1000
+      responses:
+        200:
+          description: OK
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+        default:
+          $ref: '#/components/responses/GeneralError'
+  /kaimemo/summary/{id}:
+    delete:
+      tags:
+        - 買い物集計
       summary: 買い物削除
       description: 買い物を削除する
       parameters:
@@ -59,6 +124,14 @@ paths:
           $ref: '#/components/responses/GeneralError'
 components:
   responses:
+    GetKaimemoSummary:
+      description: 週次集計
+      content:
+        application/json:
+          schema:
+            type : array
+            items: 
+              $ref: '#/components/schemas/WeeklySummary'
     GetKaimemos:
       description: 買い物一覧取得
       content:
@@ -74,6 +147,33 @@ components:
     GeneralError:
       description: Unexpected error
   schemas:
+    WeeklySummary:
+      type: object
+      properties:
+        weekStart:
+          type: string
+        weekEnd:
+          type: string
+        totalAmount:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/KaimemoAmount'
+    KaimemoAmount:
+      type: object
+      properties:
+        id:
+          type: string
+        date:
+          type: string
+          example: '2020-01-01'
+        tag:
+          type: string
+          example: 食費
+        amount:
+          type: integer
+          example: 1000
     Kaimemo:
       type: object
       properties:

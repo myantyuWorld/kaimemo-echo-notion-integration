@@ -26,13 +26,21 @@ func main() {
 		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPost, http.MethodDelete},
 	}))
 
-	repo := repository.NewNotionRepository(appConfig.NotionAPIKey, appConfig.NotionKaimemoDatabaseID)
+	repo := repository.NewNotionRepository(
+		appConfig.NotionAPIKey,
+		appConfig.NotionKaimemoDatabaseInputID,
+		appConfig.NotionKaimemoDatabaseSummaryRecordID,
+	)
 	service := service.NewKaimemoService(repo)
 	handler := handler.NewKaimemoHandler(service)
 
 	e.GET("/kaimemo", handler.FetchKaimemo)
 	e.POST("/kaimemo", handler.CreateKaimemo)
 	e.DELETE("/kaimemo/:id", handler.RemoveKaimemo)
+
+	e.GET("/kaimemo/summary", handler.FetchKaimemoSummaryRecord)
+	e.POST("/kaimemo/summary", handler.CreateKaimemoAmount)
+	e.DELETE("/kaimemo/summary/:id", handler.RemoveKaimemoAmount)
 
 	port := "3000"
 	e.Logger.Fatal(e.Start(":" + port))
