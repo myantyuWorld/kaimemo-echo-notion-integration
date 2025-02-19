@@ -129,9 +129,8 @@ components:
       content:
         application/json:
           schema:
-            type : array
-            items: 
-              $ref: '#/components/schemas/WeeklySummary'
+            type : object
+            $ref: '#/components/schemas/KaimemoSummary'
     GetKaimemos:
       description: 買い物一覧取得
       content:
@@ -147,6 +146,31 @@ components:
     GeneralError:
       description: Unexpected error
   schemas:
+    KaimemoSummary:
+      type: object
+      properties:
+        monthlySummaries:
+          type: array
+          items:
+            $ref: '#/components/schemas/MonthlySummary'
+        weeklySummaries:
+          type: array
+          items:
+            $ref: '#/components/schemas/WeeklySummary'
+    TagSummary:
+      type: object
+      additionalProperties:
+        type: integer
+    MonthlySummary:
+      type: object
+      properties:
+        month:
+          type: string
+        totalAmount:
+          type: integer
+          example: 10000
+        tagSummary :
+          $ref: '#/components/schemas/TagSummary'
     WeeklySummary:
       type: object
       properties:
