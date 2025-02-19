@@ -15,13 +15,19 @@ func (k *kaimemoService) CreateKaimemoAmount(req model.CreateKaimemoAmountReques
 }
 
 // FetchKaimemoSummaryRecord implements KaimemoService.
-func (k *kaimemoService) FetchKaimemoSummaryRecord() ([]model.WeeklySummary, error) {
+func (k *kaimemoService) FetchKaimemoSummaryRecord() (model.KaimemoSummaryResponse, error) {
 	res, err := k.repo.FetchKaimemoAmountRecords()
 	if err != nil {
-		return nil, err
+		return model.KaimemoSummaryResponse{
+			MonthlySummaries: []model.MonthlySummary{},
+			WeeklySummaries:  []model.WeeklySummary{},
+		}, err
 	}
 
-	return res.GroupByWeek(), nil
+	return model.KaimemoSummaryResponse{
+		MonthlySummaries: res.GroupByMonth(),
+		WeeklySummaries:  res.GroupByWeek(),
+	}, nil
 }
 
 // RemoveKaimemoAmount implements KaimemoService.
@@ -48,7 +54,7 @@ type KaimemoService interface {
 	FetchKaimemo() ([]model.KaimemoResponse, error)
 	CreateKaimemo(req model.CreateKaimemoRequest) error
 	RemoveKaimemo(id string) error
-	FetchKaimemoSummaryRecord() ([]model.WeeklySummary, error)
+	FetchKaimemoSummaryRecord() (model.KaimemoSummaryResponse, error)
 	CreateKaimemoAmount(req model.CreateKaimemoAmountRequest) error
 	RemoveKaimemoAmount(id string) error
 }

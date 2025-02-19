@@ -80,3 +80,106 @@ func TestKaimemoAmountRecords_GroupByWeek(t *testing.T) {
 		})
 	}
 }
+func TestKaimemoAmountRecords_GroupByMonth(t *testing.T) {
+	tests := []struct {
+		name     string
+		records  KaimemoAmountRecords
+		expected []MonthlySummary
+	}{
+		{
+			name: "empty records",
+			records: KaimemoAmountRecords{
+				Records: []KaimemoAmount{},
+			},
+			expected: []MonthlySummary{},
+		},
+		{
+			name: "single month with multiple tags",
+			records: KaimemoAmountRecords{
+				Records: []KaimemoAmount{
+					{Date: "2023-05-15", Amount: 1000, Tag: "food"},
+					{Date: "2023-05-16", Amount: 2000, Tag: "transport"},
+					{Date: "2023-05-17", Amount: 3000, Tag: "food"},
+				},
+			},
+			expected: []MonthlySummary{
+				{
+					Month:       "2023-05",
+					TotalAmount: 6000,
+					TagSummary: map[string]int{
+						"food":      4000,
+						"transport": 2000,
+					},
+				},
+			},
+		},
+		{
+			name: "multiple months with sorting",
+			records: KaimemoAmountRecords{
+				Records: []KaimemoAmount{
+					{Date: "2023-06-01", Amount: 2000, Tag: "food"},
+					{Date: "2023-05-15", Amount: 1000, Tag: "transport"},
+					{Date: "2023-07-01", Amount: 3000, Tag: "entertainment"},
+				},
+			},
+			expected: []MonthlySummary{
+				{
+					Month:       "2023-05",
+					TotalAmount: 1000,
+					TagSummary: map[string]int{
+						"transport": 1000,
+					},
+				},
+				{
+					Month:       "2023-06",
+					TotalAmount: 2000,
+					TagSummary: map[string]int{
+						"food": 2000,
+					},
+				},
+				{
+					Month:       "2023-07",
+					TotalAmount: 3000,
+					TagSummary: map[string]int{
+						"entertainment": 3000,
+					},
+				},
+			},
+		},
+		{
+			name: "same tag across different months",
+			records: KaimemoAmountRecords{
+				Records: []KaimemoAmount{
+					{Date: "2023-05-15", Amount: 1000, Tag: "food"},
+					{Date: "2023-06-16", Amount: 2000, Tag: "food"},
+					{Date: "2023-06-17", Amount: 3000, Tag: "food"},
+				},
+			},
+			expected: []MonthlySummary{
+				{
+					Month:       "2023-05",
+					TotalAmount: 1000,
+					TagSummary: map[string]int{
+						"food": 1000,
+					},
+				},
+				{
+					Month:       "2023-06",
+					TotalAmount: 5000,
+					TagSummary: map[string]int{
+						"food": 5000,
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.records.GroupByMonth()
+			if !reflect.DeepEqual(result, tt.expected) {
+				t.Errorf("\nGroupByMonth() =\n%+v\nwant\n%+v", result, tt.expected)
+			}
+		})
+	}
+}
