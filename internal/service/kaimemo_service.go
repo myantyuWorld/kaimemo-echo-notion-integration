@@ -18,7 +18,10 @@ func (k *kaimemoService) CreateKaimemoAmount(req model.CreateKaimemoAmountReques
 func (k *kaimemoService) FetchKaimemoSummaryRecord() (model.KaimemoSummaryResponse, error) {
 	res, err := k.repo.FetchKaimemoAmountRecords()
 	if err != nil {
-		return model.KaimemoSummaryResponse{}, err
+		return model.KaimemoSummaryResponse{
+			MonthlySummaries: []model.MonthlySummary{},
+			WeeklySummaries:  []model.WeeklySummary{},
+		}, err
 	}
 
 	return model.KaimemoSummaryResponse{

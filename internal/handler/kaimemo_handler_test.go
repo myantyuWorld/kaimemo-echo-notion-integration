@@ -142,7 +142,6 @@ func TestKaimemoHandler_FetchKaimemoSummaryRecord(t *testing.T) {
 	h := NewKaimemoHandler(mockService)
 	e := echo.New()
 
-	// TODO : こけている、モックが悪い？
 	t.Run("successful fetch with data", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
 		rec := httptest.NewRecorder()
@@ -255,11 +254,18 @@ func TestKaimemoHandler_FetchKaimemoSummaryRecord(t *testing.T) {
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
 
-		mockService.On("FetchKaimemoSummaryRecord").Return([]model.WeeklySummary{}, nil).Once()
+		expectedJson := `
+		{
+			"monthlySummaries": null,
+			"weeklySummaries": null
+		}
+		`
+
+		mockService.On("FetchKaimemoSummaryRecord").Return(model.KaimemoSummaryResponse{}, nil).Once()
 		err := h.FetchKaimemoSummaryRecord(c)
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, rec.Code)
-		assert.Equal(t, "[]", strings.TrimSpace(rec.Body.String()))
+		assert.JSONEq(t, expectedJson, rec.Body.String())
 	})
 
 	t.Run("service returns error", func(t *testing.T) {
@@ -267,7 +273,7 @@ func TestKaimemoHandler_FetchKaimemoSummaryRecord(t *testing.T) {
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
 
-		mockService.On("FetchKaimemoSummaryRecord").Return([]model.WeeklySummary{}, errors.New("database error")).Once()
+		mockService.On("FetchKaimemoSummaryRecord").Return(model.KaimemoSummaryResponse{}, errors.New("database error")).Once()
 		err := h.FetchKaimemoSummaryRecord(c)
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
