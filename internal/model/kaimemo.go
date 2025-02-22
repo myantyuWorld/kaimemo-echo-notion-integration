@@ -14,10 +14,14 @@ type KaimemoResponse struct {
 }
 
 type CreateKaimemoRequest struct {
-	Tag  string `json:"tag"`
-	Name string `json:"name"`
+	TempUserID string `json:"tempUserID"`
+	Tag        string `json:"tag"`
+	Name       string `json:"name"`
 }
 
+type RemoveKaimemoRequest struct {
+	TempUserID string `json:"tempUserID"`
+}
 type KaimemoAmountResponse struct {
 	ID     string `json:"id"`
 	Date   string `json:"date"`
@@ -25,9 +29,14 @@ type KaimemoAmountResponse struct {
 }
 
 type CreateKaimemoAmountRequest struct {
-	Date   string `json:"date"`
-	Tag    string `json:"tag"`
-	Amount int    `json:"amount"`
+	TempUserID string `json:"tempUserID"`
+	Date       string `json:"date"`
+	Tag        string `json:"tag"`
+	Amount     int    `json:"amount"`
+}
+
+type RemoveKaimemoAmountRequest struct {
+	TempUserID string `json:"tempUserID"`
 }
 
 type KaimemoAmount struct {

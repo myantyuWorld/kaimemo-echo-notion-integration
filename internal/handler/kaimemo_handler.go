@@ -32,7 +32,14 @@ func (k *kaimemoHandler) CreateKaimemoAmount(c echo.Context) error {
 
 // FetchKaimemoSummaryRecord implements KaimemoHandler.
 func (k *kaimemoHandler) FetchKaimemoSummaryRecord(c echo.Context) error {
-	res, err := k.service.FetchKaimemoSummaryRecord()
+	tempUserID := c.QueryParam("tempUserID")
+	if tempUserID == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "TempUserID is required",
+		})
+	}
+
+	res, err := k.service.FetchKaimemoSummaryRecord(tempUserID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error": "Failed to fetch kaimemo summary record",
@@ -44,6 +51,13 @@ func (k *kaimemoHandler) FetchKaimemoSummaryRecord(c echo.Context) error {
 
 // RemoveKaimemoAmount implements KaimemoHandler.
 func (k *kaimemoHandler) RemoveKaimemoAmount(c echo.Context) error {
+	req := model.RemoveKaimemoAmountRequest{}
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Invalid request body",
+		})
+	}
+
 	id := c.Param("id")
 	if id == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{
@@ -51,7 +65,7 @@ func (k *kaimemoHandler) RemoveKaimemoAmount(c echo.Context) error {
 		})
 	}
 
-	if err := k.service.RemoveKaimemoAmount(id); err != nil {
+	if err := k.service.RemoveKaimemoAmount(id, req.TempUserID); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error": "Failed to remove kaimemo",
 		})
@@ -80,7 +94,14 @@ func (k *kaimemoHandler) CreateKaimemo(c echo.Context) error {
 
 // FetchKaimemo implements KaimemoHandler.
 func (k *kaimemoHandler) FetchKaimemo(c echo.Context) error {
-	res, err := k.service.FetchKaimemo()
+	tempUserID := c.QueryParam("tempUserID")
+	if tempUserID == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "TempUserID is required",
+		})
+	}
+
+	res, err := k.service.FetchKaimemo(tempUserID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error": "Failed to fetch kaimemo",
@@ -92,6 +113,13 @@ func (k *kaimemoHandler) FetchKaimemo(c echo.Context) error {
 
 // RemoveKaimemo implements KaimemoHandler.
 func (k *kaimemoHandler) RemoveKaimemo(c echo.Context) error {
+	req := model.RemoveKaimemoRequest{}
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Invalid request",
+		})
+	}
+
 	id := c.Param("id")
 	if id == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{
@@ -99,7 +127,7 @@ func (k *kaimemoHandler) RemoveKaimemo(c echo.Context) error {
 		})
 	}
 
-	if err := k.service.RemoveKaimemo(id); err != nil {
+	if err := k.service.RemoveKaimemo(id, req.TempUserID); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error": "Failed to remove kaimemo",
 		})
