@@ -20,6 +20,8 @@ paths:
           name: tempUserID
           schema:
             type: string
+            required:
+              - tempUserID
       responses:
         200: 
           $ref: '#/components/responses/GetKaimemos'
@@ -89,6 +91,8 @@ paths:
           name: tempUserID
           schema:
             type: string
+            required:
+              - tempUserID
       responses:
         200:
           $ref: '#/components/responses/GetKaimemoSummary'
