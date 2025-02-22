@@ -15,8 +15,8 @@ func (k *kaimemoService) CreateKaimemoAmount(req model.CreateKaimemoAmountReques
 }
 
 // FetchKaimemoSummaryRecord implements KaimemoService.
-func (k *kaimemoService) FetchKaimemoSummaryRecord() (model.KaimemoSummaryResponse, error) {
-	res, err := k.repo.FetchKaimemoAmountRecords()
+func (k *kaimemoService) FetchKaimemoSummaryRecord(userID string) (model.KaimemoSummaryResponse, error) {
+	res, err := k.repo.FetchKaimemoAmountRecords(userID)
 	if err != nil {
 		return model.KaimemoSummaryResponse{
 			MonthlySummaries: []model.MonthlySummary{},
@@ -31,8 +31,8 @@ func (k *kaimemoService) FetchKaimemoSummaryRecord() (model.KaimemoSummaryRespon
 }
 
 // RemoveKaimemoAmount implements KaimemoService.
-func (k *kaimemoService) RemoveKaimemoAmount(id string) error {
-	return k.repo.RemoveKaimemoAmount(id)
+func (k *kaimemoService) RemoveKaimemoAmount(id string, userID string) error {
+	return k.repo.RemoveKaimemoAmount(id, userID)
 }
 
 // CreateKaimemo implements KaimemoService.
@@ -41,22 +41,22 @@ func (k *kaimemoService) CreateKaimemo(req model.CreateKaimemoRequest) error {
 }
 
 // FetchKaimemo implements KaimemoService.
-func (k *kaimemoService) FetchKaimemo() ([]model.KaimemoResponse, error) {
-	return k.repo.FetchKaimemo()
+func (k *kaimemoService) FetchKaimemo(userID string) ([]model.KaimemoResponse, error) {
+	return k.repo.FetchKaimemo(userID)
 }
 
 // RemoveKaimemo implements KaimemoService.
-func (k *kaimemoService) RemoveKaimemo(id string) error {
-	return k.repo.RemoveKaimemo(id)
+func (k *kaimemoService) RemoveKaimemo(id string, userID string) error {
+	return k.repo.RemoveKaimemo(id, userID)
 }
 
 type KaimemoService interface {
-	FetchKaimemo() ([]model.KaimemoResponse, error)
+	FetchKaimemo(userID string) ([]model.KaimemoResponse, error)
 	CreateKaimemo(req model.CreateKaimemoRequest) error
-	RemoveKaimemo(id string) error
-	FetchKaimemoSummaryRecord() (model.KaimemoSummaryResponse, error)
+	RemoveKaimemo(id string, userID string) error
+	FetchKaimemoSummaryRecord(userID string) (model.KaimemoSummaryResponse, error)
 	CreateKaimemoAmount(req model.CreateKaimemoAmountRequest) error
-	RemoveKaimemoAmount(id string) error
+	RemoveKaimemoAmount(id string, userID string) error
 }
 
 func NewKaimemoService(repo repository.KaimemoRepository) KaimemoService {
