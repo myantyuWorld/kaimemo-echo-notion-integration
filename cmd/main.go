@@ -38,6 +38,8 @@ func main() {
 	e.POST("/kaimemo", handler.CreateKaimemo)
 	e.DELETE("/kaimemo/:id", handler.RemoveKaimemo)
 
+	e.GET("/ws/kaimemo", handler.WebsocketTelegraph)
+
 	e.GET("/kaimemo/summary", handler.FetchKaimemoSummaryRecord)
 	e.POST("/kaimemo/summary", handler.CreateKaimemoAmount)
 	e.DELETE("/kaimemo/summary/:id", handler.RemoveKaimemoAmount)
