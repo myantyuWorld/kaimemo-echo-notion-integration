@@ -19,6 +19,13 @@ type CreateKaimemoRequest struct {
 	Name       string `json:"name"`
 }
 
+type TelegraphRequest struct {
+	MethodType string  `json:"methodType" validate:"required"` // 1 : 登録 2 : 削除	TempUserID *string `json:"tempUserID"`
+	ID         *string `json:"id"`
+	Tag        *string `json:"tag"`
+	Name       *string `json:"name"`
+}
+
 type RemoveKaimemoRequest struct {
 	TempUserID string `json:"tempUserID"`
 }
