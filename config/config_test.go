@@ -31,7 +31,6 @@ func TestLoadConfig_Success(t *testing.T) {
 	setEnv("LINE_STATE", "test-state")
 	setEnv("LINE_REDIRECT_URI", "https://example.com/callback")
 	setEnv("LINE_TOKEN_URL", "https://example.com/token")
-	setEnv("LINE_PROFILE_URL", "https://example.com/profile")
 
 	// テスト終了後に環境変数をリセット
 	defer unsetEnv("NOTION_API_KEY", "NOTION_DATABASE_KAIMEMO_INPUT", "NOTION_DATABASE_KAIMEMO_SUMMARY_RECORD", "FRONTEND_URL")
@@ -60,5 +59,4 @@ func TestLoadConfig_Success(t *testing.T) {
 	assert.Equal(t, "test-state", config.LINEConfig.State)
 	assert.Equal(t, "https://example.com/callback", config.LINEConfig.RedirectURI)
 	assert.Equal(t, "https://example.com/token", config.LINEConfig.TokenURL)
-	assert.Equal(t, "https://example.com/profile", config.LINEConfig.ProfileURL)
 }

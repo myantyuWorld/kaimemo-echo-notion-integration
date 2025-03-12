@@ -26,23 +26,34 @@ func main() {
 		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPost, http.MethodDelete},
 	}))
 
-	repo := repository.NewNotionRepository(
+	kaimemoRepository := repository.NewNotionRepository(
 		appConfig.NotionAPIKey,
 		appConfig.NotionKaimemoDatabaseInputID,
 		appConfig.NotionKaimemoDatabaseSummaryRecordID,
 	)
-	service := service.NewKaimemoService(repo)
-	handler := handler.NewKaimemoHandler(service)
+	kaimemoService := service.NewKaimemoService(kaimemoRepository)
+	kaimemoHandler := handler.NewKaimemoHandler(kaimemoService)
 
-	e.GET("/kaimemo", handler.FetchKaimemo)
-	e.POST("/kaimemo", handler.CreateKaimemo)
-	e.DELETE("/kaimemo/:id", handler.RemoveKaimemo)
+	lineRepository := repository.NewLineRepository(appConfig.LINEConfig)
+	lineAuthService := service.NewLineAuthService(lineRepository)
+	lineAuthHandler := handler.NewLineAuthHandler(lineAuthService, appConfig.LINEConfig)
 
-	e.GET("/ws/kaimemo", handler.WebsocketTelegraph)
+	kaimemo := e.Group("/kaimemo")
+	kaimemo.GET("", kaimemoHandler.FetchKaimemo)
+	kaimemo.POST("", kaimemoHandler.CreateKaimemo)
+	kaimemo.DELETE("/:id", kaimemoHandler.RemoveKaimemo)
 
-	e.GET("/kaimemo/summary", handler.FetchKaimemoSummaryRecord)
-	e.POST("/kaimemo/summary", handler.CreateKaimemoAmount)
-	e.DELETE("/kaimemo/summary/:id", handler.RemoveKaimemoAmount)
+	kaimemo.GET("/ws", kaimemoHandler.WebsocketTelegraph)
+
+	kaimemo.GET("/summary", kaimemoHandler.FetchKaimemoSummaryRecord)
+	kaimemo.POST("/summary", kaimemoHandler.CreateKaimemoAmount)
+	kaimemo.DELETE("/summary/:id", kaimemoHandler.RemoveKaimemoAmount)
+
+	lineAuth := e.Group("/line")
+	lineAuth.GET("/login", lineAuthHandler.Login)
+	lineAuth.GET("/callback", lineAuthHandler.Callback)
+	lineAuth.GET("/logout", lineAuthHandler.Logout)
+	lineAuth.GET("/me", lineAuthHandler.FetchMe)
 
 	port := "3000"
 	e.Logger.Fatal(e.Start(":" + port))

@@ -3,6 +3,9 @@ package config
 import (
 	"log"
 	"os"
+
+	dotenv "github.com/joho/godotenv"
+	"golang.org/x/oauth2"
 )
 
 type AppConfig struct {
@@ -11,7 +14,8 @@ type AppConfig struct {
 	NotionKaimemoDatabaseInputID         string
 	NotionKaimemoDatabaseSummaryRecordID string
 	AllowOrigins                         []string
-	LINEConfig                           *LINEConfig
+	// LINEConfig                           *LINEConfig
+	LINEConfig *oauth2.Config
 }
 
 type LINEConfig struct {
@@ -20,12 +24,18 @@ type LINEConfig struct {
 	JwtSecret    string
 	State        string
 	RedirectURI  string
-	TokenURL     string
-	ProfileURL   string
 }
 
 func LoadConfig() *AppConfig {
 	port := "3000"
+	if err := dotenv.Load(); err != nil {
+		log.Fatalln(err)
+	}
+
+	env := os.Getenv("ENV")
+	if env == "" {
+		log.Fatal("ENV is not set")
+	}
 
 	apiKey := os.Getenv("NOTION_API_KEY")
 	if apiKey == "" {
@@ -68,14 +78,10 @@ func LoadConfig() *AppConfig {
 	if lineRedirectURI == "" {
 		log.Fatal("LINE_REDIRECT is not set")
 	}
-	lineTokenURL := os.Getenv("LINE_TOKEN_URL")
-	if lineTokenURL == "" {
-		log.Fatal("LINE_TOKEN_URL is not set")
-	}
-	lineProfileURL := os.Getenv("LINE_PROFILE_URL")
-	if lineProfileURL == "" {
-		log.Fatal("LINE_PROFILE_URL is not set")
-	}
+	// lineTokenURL := os.Getenv("LINE_TOKEN_URL")
+	// if lineTokenURL == "" {
+	// 	log.Fatal("LINE_TOKEN_URL is not set")
+	// }
 
 	return &AppConfig{
 		Port:                                 port,
@@ -85,14 +91,22 @@ func LoadConfig() *AppConfig {
 		AllowOrigins: []string{
 			"http://localhost:5173", "http://localhost:4173", frontEndUrl,
 		},
-		LINEConfig: &LINEConfig{
+		// LINEConfig: &LINEConfig{
+		// 	ClientID:     lineClientID,
+		// 	ClientSecret: lineClientSecret,
+		// 	JwtSecret:    lineJwtSecret,
+		// 	State:        lineState,
+		// 	RedirectURI:  lineRedirectURI,
+		// },
+		LINEConfig: &oauth2.Config{
 			ClientID:     lineClientID,
 			ClientSecret: lineClientSecret,
-			JwtSecret:    lineJwtSecret,
-			State:        lineState,
-			RedirectURI:  lineRedirectURI,
-			TokenURL:     lineTokenURL,
-			ProfileURL:   lineProfileURL,
+			RedirectURL:  lineRedirectURI,
+			Scopes:       []string{"profile", "openid"},
+			Endpoint: oauth2.Endpoint{
+				AuthURL:  "https://access.line.me/oauth2/v2.1/authorize",
+				TokenURL: "https://api.line.me/oauth2/v2.1/token",
+			},
 		},
 	}
 }
