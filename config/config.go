@@ -4,7 +4,6 @@ import (
 	"log"
 	"os"
 
-	dotenv "github.com/joho/godotenv"
 	"golang.org/x/oauth2"
 )
 
@@ -28,14 +27,10 @@ type LINEConfig struct {
 
 func LoadConfig() *AppConfig {
 	port := "3000"
-	if err := dotenv.Load(); err != nil {
-		log.Fatalln(err)
-	}
-
-	env := os.Getenv("ENV")
-	if env == "" {
-		log.Fatal("ENV is not set")
-	}
+	// HACK : productionなら、.envを読み込まない設定にしたい
+	// if err := dotenv.Load(); err != nil {
+	// 	log.Fatalln(err)
+	// }
 
 	apiKey := os.Getenv("NOTION_API_KEY")
 	if apiKey == "" {
